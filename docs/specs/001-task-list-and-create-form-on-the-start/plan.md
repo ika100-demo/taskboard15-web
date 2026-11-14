@@ -17,12 +17,14 @@ tasks:
     covers: [AC-001.3, AC-001.4, AC-001.5, AC-001.6, AC-001.8]
     parallel_safe: true
     depends_on: [t1]
+    done: true
   - id: t3
     title: Add the TaskBoard client component (list, empty state, form, errors)
     files: [app/_components/task-board.tsx]
     covers: [AC-001.1, AC-001.2, AC-001.3, AC-001.4, AC-001.5, AC-001.6, AC-001.8]
     parallel_safe: true
     depends_on: [t1]
+    done: true
   - id: t4
     title: Replace the start page with the task board and its load-failure message
     files: [app/page.tsx, app/globals.css, app/_components/feature-card.tsx, app/_components/icons.tsx, tests/page.test.tsx, e2e/home.spec.ts, e2e/smoke.spec.ts]

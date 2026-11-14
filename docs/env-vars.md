@@ -8,6 +8,7 @@ Configuration is read exclusively from environment variables. Defaults below are
 |---|---|---|
 | `PORT` | `3000` | HTTP port the server listens on. |
 | `NODE_ENV` | `production` (in the image) | Node environment. |
+| `API_URL` | _(unset)_ | Base URL of `taskboard15-api` (e.g. `http://taskboard15-api`). Server-side only, never `NEXT_PUBLIC_`. Unset or empty: the start page shows the load and save failure messages. |
 
 ## Observability
 

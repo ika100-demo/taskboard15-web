@@ -3,6 +3,12 @@ import { describe, expect, it, vi } from "vitest";
 
 import { TaskBoard } from "@/app/_components/task-board";
 import type { CreateTaskInput, CreateTaskResult, Task } from "@/lib/tasks/types";
+import { validateTitle } from "@/lib/tasks/validate";
+
+vi.mock("@/lib/tasks/validate", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/tasks/validate")>();
+  return { ...actual, validateTitle: vi.fn(actual.validateTitle) };
+});
 
 const t1: Task = { id: "1", title: "First", due_date: "2026-01-02" };
 const t2: Task = { id: "2", title: "Second", due_date: null };
@@ -120,11 +126,14 @@ describe("TaskBoard", () => {
   });
 
   it("AC-001.6 shows the server's title message, keeps the values and adds no task", async () => {
+    const long = "a".repeat(201);
+    // the browser check would block this title first; let it through so the server's 422 answer is what shows
+    vi.mocked(validateTitle).mockReturnValueOnce(null);
     setup([t1], { ok: false, field: "title", message: "Title must be at most 200 characters" });
-    fill("Write report", "2026-12-01");
+    fill(long, "2026-12-01");
     submit();
     expect(await screen.findByText("Title must be at most 200 characters")).toHaveAttribute("id", "task-title-error");
-    expect(within(form()).getByRole("textbox", { name: "Title" })).toHaveValue("Write report");
+    expect(within(form()).getByRole("textbox", { name: "Title" })).toHaveValue(long);
     expect(within(form()).getByLabelText("Due date")).toHaveValue("2026-12-01");
     expect(screen.getAllByRole("listitem")).toHaveLength(1);
   });

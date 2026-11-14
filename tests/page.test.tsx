@@ -1,6 +1,8 @@
 import { render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTaskAction } from "@/app/actions";
+import { TaskBoard } from "@/app/_components/task-board";
 import HomePage from "@/app/page";
 import { listTasks } from "@/lib/tasks/api";
 
@@ -44,6 +46,22 @@ describe("HomePage", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("Tasks could not be loaded. Try again later.");
     expect(screen.queryByRole("list")).not.toBeInTheDocument();
     expect(screen.queryByRole("form", { name: "Create task" })).not.toBeInTheDocument();
+  });
+
+  it("AC-001.3 passes createTaskAction to the board as createTask", async () => {
+    list.mockResolvedValue({ ok: true, tasks: [] });
+    const element = await HomePage();
+    const found: unknown[] = [];
+    const walk = (node: unknown): void => {
+      if (Array.isArray(node)) return node.forEach(walk);
+      if (node && typeof node === "object" && "props" in node) {
+        const el = node as { type: unknown; props: { children?: unknown; createTask?: unknown } };
+        if (el.type === TaskBoard) found.push(el.props.createTask);
+        walk(el.props.children);
+      }
+    };
+    walk(element);
+    expect(found).toEqual([createTaskAction]);
   });
 
   it("AC-001.7 renders the page on every request", async () => {

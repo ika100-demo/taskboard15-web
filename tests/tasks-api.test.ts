@@ -67,6 +67,21 @@ describe("listTasks", () => {
     expect(warn).toHaveBeenCalledWith("tasks api call failed", expect.objectContaining({ op: "list", kind: "status", status: 500 }));
   });
 
+  it("AC-001.7 uses a 5 second timeout signal", async () => {
+    const timeout = vi.spyOn(AbortSignal, "timeout");
+    fetchMock.mockResolvedValue(json([]));
+    await listTasks();
+    expect(timeout).toHaveBeenCalledWith(5000);
+    timeout.mockRestore();
+  });
+
+  it("AC-001.7 fails on a 2xx other than 200 even with a valid array", async () => {
+    for (const status of [201, 204]) {
+      fetchMock.mockResolvedValue(new Response(status === 204 ? null : JSON.stringify([t1]), { status }));
+      expect(await listTasks()).toEqual({ ok: false });
+    }
+  });
+
   it("AC-001.7 fails on a non-JSON body", async () => {
     fetchMock.mockResolvedValue(new Response("<html>oops</html>", { status: 200 }));
     expect(await listTasks()).toEqual({ ok: false });
@@ -116,6 +131,19 @@ describe("postTask", () => {
     fetchMock.mockResolvedValue(json({ detail: [{ loc: ["body", "title"], msg: "bad", type: "x" }] }, 422));
     expect(await postTask({ title: "x", due_date: null })).toEqual({ ok: false, reason: "title_invalid" });
     expect(warn).not.toHaveBeenCalled();
+  });
+
+  it("AC-001.8 uses a 5 second timeout signal", async () => {
+    const timeout = vi.spyOn(AbortSignal, "timeout");
+    fetchMock.mockResolvedValue(json(t1, 201));
+    await postTask({ title: "First", due_date: null });
+    expect(timeout).toHaveBeenCalledWith(5000);
+    timeout.mockRestore();
+  });
+
+  it("AC-001.8 maps a 200 with a Task body to failed", async () => {
+    fetchMock.mockResolvedValue(json(t1, 200));
+    expect(await postTask({ title: "First", due_date: null })).toEqual({ ok: false, reason: "failed" });
   });
 
   it("AC-001.8 maps a 422 not naming the title to failed", async () => {
